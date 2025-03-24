@@ -1,0 +1,16 @@
+**/__pycache__
+**/__pycache__/**
+**/.env
+**/certs
+**/certs/**
+relay/hls
+relay/hls/**
+**/venv
+**/venv/**
+**/.pytest_cache
+**/.pytest_cache/**
+**/db.sqlite3
+**/console/console/jwt_auth/keys
+**/awsiot_keys
+**/awsiot_keys/**
+**/stream.key

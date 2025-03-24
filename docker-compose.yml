@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  stunnel:
+    image: alpine
+    container_name: stunnel
+    restart: always
+    networks:
+      - relay_network
+    volumes:
+      - ./relay/stunnel.conf:/etc/stunnel/stunnel.conf
+      - ./relay/certs/stunnel.pem:/etc/stunnel/stunnel.pem
+    ports:
+      - "443:443"
+    command: >
+      sh -c "apk add --no-cache openssl &&
+              apk add --no-cache stunnel &&
+              stunnel /etc/stunnel/stunnel.conf"
+
+  nginx-rtmp:
+    image: rtmp-image
+    build: ./relay
+    container_name: nginx-rtmp
+    restart: always
+    networks:
+      - relay_network
+    volumes:
+      - ./relay/nginx.conf:/etc/nginx/nginx.conf
+      - ./relay/hls:/home/hls
+      - ./relay/stream_manager/stream_manager:/etc/stream_manager
+      - ./console/console/console/static:/home/static
+    ports:
+      - "1935:1935"
+      - "8080:8080"
+    command: >
+      sh -c "chown -R www-data:www-data /home/hls && 
+            chmod -R 755 /home/hls &&
+            chmod +x /etc/stream_manager/start_stream.sh &&
+            (cd /etc/stream_manager && python3 -m mqtt &) &&
+            nginx -g 'daemon off;'"
+
+  django-console:
+    build: ./console
+    container_name: django-console
+    restart: always
+    networks:
+      - relay_network
+    volumes:
+      - ./console:/etc/console
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "cd /etc/console/console &&
+            gunicorn console.wsgi --bind 0.0.0.0:8000"
+
+networks:
+  relay_network:
+    driver: bridge
