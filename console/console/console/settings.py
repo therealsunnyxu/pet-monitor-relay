@@ -20,13 +20,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-3054)kpp(ak8@z-=z9+4gk5s(bu%-^)tua45bj&6q_e%dm8d0!"
+SECRET_KEY = "CHANGE THIS"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "django-console"]
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1", "http://localhost", "http://127.0.0.1:8080", "http://localhost:8080"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "django-console", "therealsunnyxu.com"]
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1", "http://localhost", "http://127.0.0.1:8080", "http://localhost:8080", "https://pet-monitor-api.therealsunnyxu.com"]
 
 # Application definition
 
