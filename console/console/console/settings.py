@@ -23,11 +23,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "CHANGE THIS"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "django-console", "therealsunnyxu.com"]
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1", "http://localhost", "http://127.0.0.1:8080", "http://localhost:8080", "https://pet-monitor-api.therealsunnyxu.com"]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1", "http://localhost", "http://127.0.0.1:8080", "http://127.0.0.1:5173", "http://localhost:8080", "http://localhost:5173", "https://pet-monitor-api.therealsunnyxu.com"]
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1", "http://localhost", "http://127.0.0.1:8080", "http://127.0.0.1:5173", "http://localhost:8080", "http://localhost:5173", "https://pet-monitor-api.therealsunnyxu.com"]
+CORS_ALLOW_HEADERS = [ "accept", "referer", "accept-encoding", "authorization", "content-type", "dnt", "origin", "user-agent", "x-csrftoken", "x-sessionid", "x-requested-with"]
 
+CSRF_COOKIE_SECURE = False  # Only if you're not using HTTPS
+CSRF_COOKIE_HTTPONLY = False
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,16 +42,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders"
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware"
 ]
 
 ROOT_URLCONF = "console.urls"

@@ -40,6 +40,7 @@ services:
             nginx -g 'daemon off;'"
 
   django-console:
+    image: django-console
     build: ./console
     container_name: django-console
     restart: always

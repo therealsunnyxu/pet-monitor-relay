@@ -21,9 +21,10 @@ from .auth_endpoint import views as AuthViews
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("login/", AuthViews.login_handler, name="login"),
-    path("logout/", AuthViews.logout_handler, name="logout"),
+    path("auth/login", AuthViews.login_handler, name="login"),
+    path("auth/logout", AuthViews.logout_handler, name="logout"),
     path("token/refresh", AuthViews.refresh_access_token_handler, name="token-refresh"),
-    path("public_key", AuthViews.get_public_key_handler, name="public-key"),
+    path("auth/public_key", AuthViews.get_public_key_handler, name="public-key"),
+    path("token/csrf", AuthViews.csrf_token_handler, name="token-csrf"),
     path("token/access", AuthViews.validate_access_token_handler, name="token-access"),
 ]

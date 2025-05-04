@@ -69,17 +69,15 @@ class JWTBackend(ModelBackend):
             username (str): The user's name (default None)
             password (str): The user's password (default None)
             **kwargs (dict[str, Any]): Extra parameters
-                REMEMBER_ME (bool): Whether the refresh token should be "remembered" for an extended period of time
+                remember_me (bool): Whether the refresh token should be "remembered" for an extended period of time
 
         Returns:
             AbstractBaseUser: The user model that the Django service currently uses
         """
-        if password is None:
+        if (password is None and username is None) or (len(password) < 1 and len(username) < 1):
             # Automatically assume the user is logged in, since by default,
             # Django's DB-backed session give the user a cookie containing
             # their session ID, which is HTTP only.
-
-            # This stage doesn't depend on the username field at all.
             if not request.session.get("access_token"):
                 # Assume that the user should refresh the token
                 # Don't do it automatically
@@ -108,10 +106,10 @@ class JWTBackend(ModelBackend):
 
         # User confirmed to not be none
         # Check if the kwargs has a Remember Me field
-        remember_me = False
-        if kwargs.get("REMEMBER_ME") and type(kwargs["REMEMBER_ME"]) == bool:
-            remember_me = True
-        self._store_tokens_on_login(request, user, remember_me)
+        temp_remember_me = False
+        if kwargs.get("remember_me") and kwargs["remember_me"] == "on":
+            temp_remember_me = True
+        self._store_tokens_on_login(request, user, temp_remember_me)
         return user
 
     def _authenticate_with_token(self, token: str | bytes):
@@ -130,7 +128,10 @@ class JWTBackend(ModelBackend):
         """
         try:
             access_token: JWT = JWT()
-            access_token.deserialize(token, self._key)
+            try:
+                access_token.deserialize(token, self._key)
+            except Exception as e:
+                raise e
             claims: dict | str = access_token.claims
             if type(claims) == str:
                 # Assume that the claims are somehow encoded in JSON
@@ -150,10 +151,11 @@ class JWTBackend(ModelBackend):
                 raise ValueError(f"Refresh token expired at {exp}.")
 
             user = UserModel._default_manager.get_by_natural_key(
-                access_token.claims.get("username")
+                claims.get("username")
             )
             return user
-        except Exception:
+        except Exception as e:
+            print(e, file=sys.stderr)
             return None
 
     def _store_tokens_on_login(
@@ -169,6 +171,7 @@ class JWTBackend(ModelBackend):
         refresh_data = refresh_token.serialize()
         request.session["access_token"] = access_data
         request.session["refresh_token"] = refresh_data
+        request.session.set_expiry(timedelta(seconds=refresh_lifetime))
 
     def _make_token(
         self,

@@ -1,9 +1,10 @@
+import sys
 from django.contrib.auth import authenticate
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
+from django.middleware.csrf import get_token
 from django.views.decorators.http import require_http_methods as method
-import json
 from .forms import LoginForm
 from jwt_auth.backends import JWTBackend
 
@@ -13,14 +14,21 @@ auth_backend = JWTBackend()
 @method(["POST"])
 def login_handler(request: HttpRequest):
     form: LoginForm = LoginForm(request.POST)
+    user: AbstractBaseUser = None
     if not form.is_valid():
-        return HttpResponse(content="Incorrect username or password", status=401)
-
-    user: AbstractBaseUser = authenticate(
-        request,
-        username=form.cleaned_data.get("username"),
-        password=form.cleaned_data.get("password"),
-    )
+        user = authenticate(
+            request,
+            username=None,
+            password=None,
+            remember_me=form.cleaned_data.get("remember_me"),
+        )
+    else:
+        user = authenticate(
+            request,
+            username=form.cleaned_data.get("username"),
+            password=form.cleaned_data.get("password"),
+            remember_me=form.cleaned_data.get("remember_me")
+        )
 
     if user is None:
         return HttpResponse(content="Incorrect username or password", status=401)
@@ -66,3 +74,9 @@ def validate_access_token_handler(request: HttpRequest):
         return HttpResponse(content="Invalid or no access token", status=401)
 
     return HttpResponse(content="Access token is valid", status=200)
+
+@method(["GET"])
+def csrf_token_handler(request: HttpRequest):
+    get_token(request)
+
+    return HttpResponse(content="CSRF cookie set", status=200)
