@@ -107,7 +107,7 @@ class JWTBackend(ModelBackend):
         # User confirmed to not be none
         # Check if the kwargs has a Remember Me field
         temp_remember_me = False
-        if kwargs.get("remember_me") and kwargs["remember_me"] == "on":
+        if kwargs.get("remember_me") and (kwargs["remember_me"] == "on" or kwargs["remember_me"] == True):
             temp_remember_me = True
         self._store_tokens_on_login(request, user, temp_remember_me)
         return user
