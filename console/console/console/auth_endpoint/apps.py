@@ -3,4 +3,5 @@ from django.apps import AppConfig
 
 class AuthEndpointConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "auth_endpoint"
+    name = "console.auth_endpoint"
+    label = "auth_endpoint"

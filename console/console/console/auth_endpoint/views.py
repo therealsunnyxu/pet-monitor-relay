@@ -1,19 +1,23 @@
+import secrets
 import sys
-from django.contrib.auth import authenticate
+from datetime import datetime, timedelta
+from django.conf import settings
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 from django.middleware.csrf import get_token
+from django.template.loader import render_to_string
 from django.views.decorators.http import require_http_methods as method
-from .forms import LoginForm
+from . import forms, models
 from jwt_auth.backends import JWTBackend
 
 auth_backend = JWTBackend()
-
+UserModel = get_user_model()
 
 @method(["POST"])
 def login_handler(request: HttpRequest):
-    form: LoginForm = LoginForm(request.POST)
+    form = forms.LoginForm(request.POST)
     user: AbstractBaseUser = None
     if not form.is_valid():
         user = authenticate(
@@ -77,6 +81,244 @@ def validate_access_token_handler(request: HttpRequest):
 
 @method(["GET"])
 def csrf_token_handler(request: HttpRequest):
-    get_token(request)
+    res = HttpResponse(content="CSRF cookie set", status=200)
+    res.set_cookie("csrftoken", get_token(request))
 
-    return HttpResponse(content="CSRF cookie set", status=200)
+    return res
+
+def generate_reset_code(length: int = settings.RESET_CODE_LENGTH) -> int:
+    return secrets.randbelow(10 ** length)
+
+def is_access_token_valid(request: HttpRequest):
+    return auth_backend.validate_access_token(request)
+
+# Reset request handlers #
+
+def send_code_email(user: AbstractBaseUser, field_name: str, reset_code: int | str):
+    user.email_user(
+        f"Pet Cam: {field_name} Reset Code", 
+        render_to_string("emails/reset_code_email.html.j2", 
+            context={
+                "field_name": field_name.lower(), 
+                "reset_code": reset_code
+            }), 
+        settings.EMAIL_HOST_USER
+    )
+
+@method(["POST"])
+def forgot_password_request_handler(request: HttpRequest):
+    form = forms.ForgotPasswordRequestForm(request.POST)
+    
+    if not form.is_valid():
+        return HttpResponse(content="Email field is invalid", status=400)
+    
+    # Allow user to make request by putting in their email
+    # It will send only if the inputted email belongs to a user
+    request_email = form.cleaned_data.get("email")
+    res = HttpResponse(status=200)
+    user: AbstractBaseUser = None
+    try:
+        user = UserModel.objects.get(email=request_email)
+    except Exception:
+        return res
+    if user:
+        reset_code = generate_reset_code()
+        field_name = "Password"
+        forgot_password_request = models.ForgotPasswordRequest.objects.create(user=user, code=reset_code)
+        send_code_email(user, field_name, reset_code)
+
+        # unique session so that only the device that requested the reset is the one that fulfills it
+        request_uuid = forgot_password_request.uuid
+        res.set_cookie(key="reset_pw_uuid", value=request_uuid, httponly=True, samesite="Lax",expires=datetime.now() + timedelta(days=1))
+
+    # Send a 200 regardless of whether or not the email actually exists in the system
+    # to prevent brute force email scanning
+    # Rely on front-end to give a vague message
+    return res
+
+@method(["POST"])
+def change_password_request_handler(request: HttpRequest):
+    form = forms.PasswordChangeRequestForm(request.POST)
+    
+    if not form.is_valid():
+        return HttpResponse(content="All fields must be completed", status=400)
+    
+    # Don't allow user to submit change request if they're not logged in
+    user: AbstractBaseUser = request.user
+    if not user:
+        return HttpResponse("Current session is invalid", status=400)
+    
+    if not is_access_token_valid(request):
+        return HttpResponse(content="Invalid or no access token", status=401)
+
+    new_password = form.cleaned_data.get("new_password")
+    reset_code = generate_reset_code()
+    field_name = "Password"
+    models.PasswordChangeRequest.objects.create(user=user, code=reset_code, new_password=new_password)
+    send_code_email(user, field_name, reset_code)
+
+    return HttpResponse(status=200)
+
+@method(["POST"])
+def change_email_request_handler(request: HttpRequest):
+    form = forms.EmailChangeRequestForm(request.POST)
+
+    if not form.is_valid():
+        return HttpResponse(content="All fields must be completed", status=400)
+
+    # Don't allow user to submit change request if they're not logged in
+    user: AbstractBaseUser = request.user
+    if not user:
+        return HttpResponse("Current session is invalid", status=400)
+    
+    if not is_access_token_valid(request):
+        return HttpResponse(content="Invalid or no access token", status=401)
+    
+    new_email = form.cleaned_data.get("new_email")
+    reset_code = generate_reset_code()
+    field_name = "Email"
+    models.EmailChangeRequest.objects.create(user=user, code=reset_code, new_email=new_email)
+    send_code_email(user, field_name, reset_code)
+
+    return HttpResponse(status=200)
+
+@method(["POST"])
+def forgot_password_code_handler(request: HttpRequest):
+    form = forms.VerificationCodeForm(request.POST)
+    
+    if not form.is_valid():
+        return HttpResponse(content=f"Field must contain a valid code", status=400)
+    
+    reset_pw_uuid = request.COOKIES.get("reset_pw_uuid")
+    if not reset_pw_uuid:
+        return HttpResponse(content="No active password reset request", status=400)
+    
+    forgot_password_request = models.ForgotPasswordRequest.objects.get(uuid=reset_pw_uuid)
+    if not forgot_password_request:
+        return HttpResponse(content="Invalid password reset request", status=400)
+    
+    forgot_password_code = forgot_password_request.code
+    submitted_code = form.cleaned_data.get("code")
+    if forgot_password_code != submitted_code:
+        return HttpResponse(content="Incorrect code", status=400)
+    
+    if forgot_password_request.is_expired():
+        return HttpResponse(content="Code expired", status=400)
+
+    if forgot_password_request.is_fulfilled():
+        return HttpResponse(content="Code already used", status=400)
+    
+    forgot_password_request.request_fulfilled_at = datetime.now()
+    # make a part two to allow the user to reset their password given that their original request is now valid
+    # they still have their reset password cookie
+    models.ForgotPasswordChangeRequest.objects.create(original_request=forgot_password_request)
+    return HttpResponse(content="Code accepted", status=200)
+
+@method(["POST"])
+def forgot_password_change_handler(request: HttpRequest):
+    form = forms.ForgotPasswordChangeForm(request.POST)
+
+    if form.cleaned_data.get("cancelled") is not None:
+        res = HttpResponse(content="Successfully cancelled request", status=200)
+        res.set_cookie("reset_pw_uuid", "", expires="0", httponly=True)
+        return res
+    
+    reset_pw_uuid = request.COOKIES.get("reset_pw_uuid")
+    if not reset_pw_uuid:
+        return HttpResponse(content="No active password reset request", status=400)
+
+    original_request = models.ForgotPasswordRequest.objects.get(uuid=reset_pw_uuid)
+    if not original_request:
+        return HttpResponse(content="Invalid password reset request", status=400)
+        
+    if not form.is_valid():
+        return HttpResponse(content="All fields must be completed", status=400)
+    
+    child_request = models.ForgotPasswordChangeRequest.objects.get(original_request=original_request)
+
+    if child_request.is_cancelled():
+        return HttpResponse(content="Cannot process a cancelled request", status=400)
+    
+    if child_request.is_expired():
+        return HttpResponse(content="Request expired", status=400)
+    
+    if child_request.is_fulfilled():
+        return HttpResponse(content="Request already fulfilled", status=400)
+
+    new_password = form.cleaned_data.get("new_password")
+    confirm_new_password = form.cleaned_data.get("confirm_new_password")
+    if new_password != confirm_new_password:
+        return HttpResponse(content="New password must match confirm new password", status=400)
+    
+    user: AbstractBaseUser = original_request.user
+    if not user:
+        return HttpResponse(content="Invalid user", status=500)
+    
+    user.set_password(new_password)
+    user.save()
+    child_request.request_fulfilled_at = datetime.now()
+    
+    return HttpResponse(status=418)
+
+@method(["POST"])
+def change_email_code_handler(request: HttpRequest):
+    form = forms.VerificationCodeForm(request.POST)
+
+    if not form.is_valid():
+        return HttpResponse(content=f"Field must contain a valid code", status=400)
+    
+    # Don't allow user to submit change request if they're not logged in
+    user: AbstractBaseUser = request.user
+    if not user:
+        return HttpResponse("Current session is invalid", status=400)
+    
+    if not is_access_token_valid(request):
+        return HttpResponse(content="Invalid or no access token", status=401)
+    
+    change_email_request = models.EmailChangeRequest.objects.filter(user=user).latest("email_sent_at")
+    if change_email_request.code != form.cleaned_data.get("code"):
+        return HttpResponse("Incorrect code", status=400)
+    
+    if change_email_request.is_expired():
+        return HttpResponse(content="Code expired", status=400)
+    
+    if change_email_request.is_fulfilled():
+        return HttpResponse(content="Code already used", status=400)
+    
+    user.email = change_email_request.new_email
+    user.save()
+    change_email_request.request_fulfilled_at = datetime.now()
+    return HttpResponse(content="Successfully changed email", status=200)
+
+@method(["POST"])
+def change_password_code_handler(request: HttpRequest):
+    form = forms.VerificationCodeForm(request.POST)
+    
+    if not form.is_valid():
+        return HttpResponse(content=f"Field must contain a valid code", status=400)
+    
+    # Don't allow user to submit change request if they're not logged in
+    user: AbstractBaseUser = request.user
+    if not user:
+        return HttpResponse("Current session is invalid", status=400)
+    
+    if not is_access_token_valid(request):
+        return HttpResponse(content="Invalid or no access token", status=401)
+    
+    change_password_request = models.PasswordChangeRequest.objects.filter(user=user).latest("email_sent_at")
+    if change_password_request.code != form.cleaned_data.get("code"):
+        return HttpResponse("Incorrect code", status=400)
+    
+    if change_password_request.is_expired():
+        return HttpResponse(content="Code expired", status=400)
+    
+    if change_password_request.is_fulfilled():
+        return HttpResponse(content="Code already used", status=400)
+    
+    if change_password_request.new_password != change_password_request.confirm_new_password:
+        return HttpResponse(content="New password must match confirm new password", status=400)
+    
+    user.set_password(change_password_request.new_password)
+    user.save()
+    change_password_request.request_fulfilled_at = datetime.now()
+    return HttpResponse(content="Successfully changed password", status=200)
