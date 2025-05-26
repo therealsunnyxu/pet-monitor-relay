@@ -172,7 +172,7 @@ class JWTBackend(ModelBackend):
         request.session["access_token"] = access_data
         request.session["refresh_token"] = refresh_data
         request.session.set_expiry(timedelta(seconds=refresh_lifetime))
-        request.session.save()
+
     def _make_token(
         self,
         user: AbstractBaseUser,
@@ -260,7 +260,6 @@ class JWTBackend(ModelBackend):
             access_token: JWT = self._make_token(user, ACCESS_TOKEN_LIFETIME)
             access_data = access_token.serialize()
             request.session["access_token"] = access_data
-            request.session.save()
             return True
         except Exception as e:
             print(e)

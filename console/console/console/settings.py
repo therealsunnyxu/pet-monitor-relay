@@ -66,7 +66,7 @@ ROOT_URLCONF = "console.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, 'console', 'templates')],
+        "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -116,8 +116,6 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-AUTH_USER_MODEL = 'auth.User'
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -148,25 +146,3 @@ EMAIL_HOST_USER = DOTENV["EMAIL_HOST_USER"]
 EMAIL_HOST_PASSWORD = DOTENV["EMAIL_HOST_PASSWORD"]
 
 RESET_CODE_LENGTH = 6
-
-# Settings needed for VSCode to register the tests for debug mode, for some reason
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "WARNING",
-    },
-}
-LOGGING_CONFIG = 'logging.config.dictConfig'
-DEFAULT_EXCEPTION_REPORTER = 'django.views.debug.ExceptionReporter'
-FORCE_SCRIPT_NAME = None
-DEFAULT_TABLESPACE = ''
-ABSOLUTE_URL_OVERRIDES = {}
-LOCALE_PATHS = []
-DEFAULT_INDEX_TABLESPACE = ''

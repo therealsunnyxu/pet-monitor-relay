@@ -1,6 +1,5 @@
 asgiref==3.8.1
 bcrypt==4.3.0
-beautifulsoup4==4.13.4
 cffi==1.17.1
 colorama==0.4.6
 cryptography==44.0.1
@@ -15,7 +14,6 @@ pytest==8.3.4
 pytest-django==4.10.0
 python-dotenv==1.1.0
 pytimeparse==1.1.8
-soupsieve==2.7
 sqlparse==0.5.3
 typing_extensions==4.12.2
 tzdata==2025.1
