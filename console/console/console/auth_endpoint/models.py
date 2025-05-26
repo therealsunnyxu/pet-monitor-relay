@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 import uuid
 # Create your models here.
 
@@ -15,11 +15,11 @@ class AbstractResetRequest(models.Model):
         abstract = True
 
     def is_expired(self):
-        return self.email_sent_at + self.expires_at <= datetime.now()
+        expiry_date = self.email_sent_at + self.expires_at
+        return expiry_date < datetime.now(timezone.utc)
     
     def is_fulfilled(self):
-        return self.request_fulfilled_at is not None # or self.request_fulfilled_at > datetime.now()
-
+        return self.request_fulfilled_at is not None # or self.request_fulfilled_at > datetime.now(datetime.timezone.utc)
 
 class EmailChangeRequest(AbstractResetRequest):
     new_email = models.EmailField(null=False)
@@ -33,14 +33,14 @@ class ForgotPasswordRequest(AbstractResetRequest):
 class ForgotPasswordChangeRequest(models.Model):
     original_request = models.ForeignKey(ForgotPasswordRequest, on_delete=models.CASCADE)
     request_fulfilled_at = models.DateTimeField(null=True)
-    expires_at = models.DateTimeField(null=False, default=lambda _:datetime.now() + timedelta(days=1))
+    expires_at = models.DateTimeField(null=False, default=datetime.now(timezone.utc) + timedelta(days=1))
     request_cancelled = models.BooleanField(null=False, default=False)
 
     def is_expired(self):
-        return self.expires_at <= datetime.now()
+        return self.expires_at < datetime.now(timezone.utc)
     
     def is_fulfilled(self):
-        return self.request_fulfilled_at is not None # or self.request_fulfilled_at > datetime.now()
+        return self.request_fulfilled_at is not None # or self.request_fulfilled_at > datetime.now(timezone.utc)
     
     def is_cancelled(self):
         return self.request_cancelled == True

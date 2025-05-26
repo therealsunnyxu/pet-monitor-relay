@@ -1,0 +1,1177 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.2, pytest-8.3.4, pluggy-1.5.0
+django: version: 5.1.6, settings: console.settings (from ini)
+rootdir: C:\Users\Sunny\Documents\Projects\pet-monitor\console\console
+configfile: pytest.ini
+plugins: django-4.10.0
+collected 22 items
+
+console\tests\test_change_email.py ..FFFFFFFFFFFFFFFFFFFF                [100%]
+
+================================== FAILURES ===================================
+_ test_change_email_request_goes_into_db[goodemail@fakemail.com-betteremail@fakemail.com-testpass-True] _
+
+client = <django.test.client.Client object at 0x0000021CF2602890>
+session = <WSGIRequest: GET '/'>, old_email = 'goodemail@fakemail.com'
+new_email = 'betteremail@fakemail.com', password = 'testpass', valid = True
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+>       assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+E       AssertionError: Email request processed: expected True, got False
+E       assert (401 == 200) is True
+E        +  where 401 = <HttpResponse status_code=401, "text/html; charset=utf-8">.status_code
+
+console\tests\test_change_email.py:75: AssertionError
+---------------------------- Captured stderr call -----------------------------
+'NoneType' object has no attribute 'count'
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Unauthorized: /auth/account/email
+_ test_change_email_request_goes_into_db[goodemail@fakemail.com-betteremail@fakemail.com--False] _
+
+client = <django.test.client.Client object at 0x0000021CF2242290>
+session = <WSGIRequest: GET '/'>, old_email = 'goodemail@fakemail.com'
+new_email = 'betteremail@fakemail.com', password = '', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+_ test_change_email_request_goes_into_db[goodemail@fakemail.com-bademail-testpass-False] _
+
+client = <django.test.client.Client object at 0x0000021CF2639F10>
+session = <WSGIRequest: GET '/'>, old_email = 'goodemail@fakemail.com'
+new_email = 'bademail', password = 'testpass', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+_ test_change_email_request_goes_into_db[goodemail@fakemail.com-bademail--False] _
+
+client = <django.test.client.Client object at 0x0000021CF26471D0>
+session = <WSGIRequest: GET '/'>, old_email = 'goodemail@fakemail.com'
+new_email = 'bademail', password = '', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+_ test_change_email_request_goes_into_db[goodemail@fakemail.com--testpass-False] _
+
+client = <django.test.client.Client object at 0x0000021CF381AE50>
+session = <WSGIRequest: GET '/'>, old_email = 'goodemail@fakemail.com'
+new_email = '', password = 'testpass', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+___ test_change_email_request_goes_into_db[goodemail@fakemail.com---False] ____
+
+client = <django.test.client.Client object at 0x0000021CF265EDD0>
+session = <WSGIRequest: GET '/'>, old_email = 'goodemail@fakemail.com'
+new_email = '', password = '', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+_ test_change_email_request_goes_into_db[bademail-betteremail@fakemail.com-testpass-False] _
+
+client = <django.test.client.Client object at 0x0000021CF36C5750>
+session = <WSGIRequest: GET '/'>, old_email = 'bademail'
+new_email = 'betteremail@fakemail.com', password = 'testpass', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+_ test_change_email_request_goes_into_db[bademail-betteremail@fakemail.com--False] _
+
+client = <django.test.client.Client object at 0x0000021CF2600810>
+session = <WSGIRequest: GET '/'>, old_email = 'bademail'
+new_email = 'betteremail@fakemail.com', password = '', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+__ test_change_email_request_goes_into_db[bademail-bademail-testpass-False] ___
+
+client = <django.test.client.Client object at 0x0000021CF36E5350>
+session = <WSGIRequest: GET '/'>, old_email = 'bademail', new_email = 'bademail'
+password = 'testpass', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+______ test_change_email_request_goes_into_db[bademail-bademail--False] _______
+
+client = <django.test.client.Client object at 0x0000021CF381D5D0>
+session = <WSGIRequest: GET '/'>, old_email = 'bademail', new_email = 'bademail'
+password = '', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+______ test_change_email_request_goes_into_db[bademail--testpass-False] _______
+
+client = <django.test.client.Client object at 0x0000021CF36DEA90>
+session = <WSGIRequest: GET '/'>, old_email = 'bademail', new_email = ''
+password = 'testpass', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+__________ test_change_email_request_goes_into_db[bademail---False] ___________
+
+client = <django.test.client.Client object at 0x0000021CF21D2D10>
+session = <WSGIRequest: GET '/'>, old_email = 'bademail', new_email = ''
+password = '', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+_ test_change_email_request_goes_into_db[-betteremail@fakemail.com-testpass-False] _
+
+client = <django.test.client.Client object at 0x0000021CF267CF50>
+session = <WSGIRequest: GET '/'>, old_email = ''
+new_email = 'betteremail@fakemail.com', password = 'testpass', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+__ test_change_email_request_goes_into_db[-betteremail@fakemail.com--False] ___
+
+client = <django.test.client.Client object at 0x0000021CF269BA90>
+session = <WSGIRequest: GET '/'>, old_email = ''
+new_email = 'betteremail@fakemail.com', password = '', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+______ test_change_email_request_goes_into_db[-bademail-testpass-False] _______
+
+client = <django.test.client.Client object at 0x0000021CF3979950>
+session = <WSGIRequest: GET '/'>, old_email = '', new_email = 'bademail'
+password = 'testpass', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+__________ test_change_email_request_goes_into_db[-bademail--False] ___________
+
+client = <django.test.client.Client object at 0x0000021CF3850290>
+session = <WSGIRequest: GET '/'>, old_email = '', new_email = 'bademail'
+password = '', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+__________ test_change_email_request_goes_into_db[--testpass-False] ___________
+
+client = <django.test.client.Client object at 0x0000021CF2651690>
+session = <WSGIRequest: GET '/'>, old_email = '', new_email = ''
+password = 'testpass', valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+______________ test_change_email_request_goes_into_db[---False] _______________
+
+client = <django.test.client.Client object at 0x0000021CF369D290>
+session = <WSGIRequest: GET '/'>, old_email = '', new_email = '', password = ''
+valid = False
+
+    @pytest.mark.parametrize(CHANGE_EMAIL_REQUEST_PARAMS, change_email_request_combos)
+    @pytest.mark.django_db
+    def test_change_email_request_goes_into_db(client, session, old_email: str, new_email: str, password: str, valid: bool):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, old_email)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": old_email, "new_email": new_email, "password": password}
+        )
+        assert (res.status_code == 200) is valid, f"Email request processed: expected {valid}, got {res.status_code == 200}"
+    
+        assert (len(mail.outbox) >= 1) is valid, f"Verification code sent: expected {valid}, got {len(mail.outbox) >= 1}"
+    
+>       actual_reset_request = models.EmailChangeRequest.objects.get(user=user)
+
+console\tests\test_change_email.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <QuerySet []>, args = (), kwargs = {'user': <User: testpass>}
+clone = <QuerySet []>, limit = 21, num = 0
+
+    def get(self, *args, **kwargs):
+        """
+        Perform the query and return a single object matching the given
+        keyword arguments.
+        """
+        if self.query.combinator and (args or kwargs):
+            raise NotSupportedError(
+                "Calling QuerySet.get(...) with filters after %s() is not "
+                "supported." % self.query.combinator
+            )
+        clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+        if self.query.can_filter() and not self.query.distinct_fields:
+            clone = clone.order_by()
+        limit = None
+        if (
+            not clone.query.select_for_update
+            or connections[clone.db].features.supports_select_for_update_with_limit
+        ):
+            limit = MAX_GET_RESULTS
+            clone.query.set_limits(high=limit)
+        num = len(clone)
+        if num == 1:
+            return clone._result_cache[0]
+        if not num:
+>           raise self.model.DoesNotExist(
+                "%s matching query does not exist." % self.model._meta.object_name
+            )
+E           console.auth_endpoint.models.EmailChangeRequest.DoesNotExist: EmailChangeRequest matching query does not exist.
+
+..\venv\Lib\site-packages\django\db\models\query.py:649: DoesNotExist
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Bad Request: /auth/account/email
+_______________ test_email_change_code_refuses_if_not_logged_in _______________
+
+client = <django.test.client.Client object at 0x0000021CF36CDF50>
+session = <WSGIRequest: GET '/'>
+
+    @pytest.mark.django_db
+    def test_email_change_code_refuses_if_not_logged_in(client, session):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, GOOD_EMAIL)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": GOOD_EMAIL, "new_email": BETTER_EMAIL, "password": TEST_PASSWORD}
+        )
+    
+    
+>       email_obj = mail.outbox[0]
+E       IndexError: list index out of range
+
+console\tests\test_change_email.py:93: IndexError
+---------------------------- Captured stderr call -----------------------------
+'NoneType' object has no attribute 'count'
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Unauthorized: /auth/account/email
+___________________________ test_email_change_code ____________________________
+
+client = <django.test.client.Client object at 0x0000021CF36CDE90>
+session = <WSGIRequest: GET '/'>
+
+    @pytest.mark.django_db
+    def test_email_change_code(client, session):
+        user = login(client, session, TEST_USERNAME, TEST_PASSWORD, GOOD_EMAIL)
+    
+        res = client.post(
+            CHANGE_EMAIL_REQUEST_URL,
+            data={"old_email": GOOD_EMAIL, "new_email": BETTER_EMAIL, "password": TEST_PASSWORD}
+        )
+    
+>       email_obj = mail.outbox[0]
+E       IndexError: list index out of range
+
+console\tests\test_change_email.py:121: IndexError
+---------------------------- Captured stderr call -----------------------------
+'NoneType' object has no attribute 'count'
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:248 Not Found: /testuser
+WARNING  django.request:log.py:248 Unauthorized: /auth/account/email
+=========================== short test summary info ===========================
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[goodemail@fakemail.com-betteremail@fakemail.com-testpass-True]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[goodemail@fakemail.com-betteremail@fakemail.com--False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[goodemail@fakemail.com-bademail-testpass-False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[goodemail@fakemail.com-bademail--False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[goodemail@fakemail.com--testpass-False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[goodemail@fakemail.com---False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[bademail-betteremail@fakemail.com-testpass-False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[bademail-betteremail@fakemail.com--False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[bademail-bademail-testpass-False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[bademail-bademail--False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[bademail--testpass-False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[bademail---False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[-betteremail@fakemail.com-testpass-False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[-betteremail@fakemail.com--False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[-bademail-testpass-False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[-bademail--False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[--testpass-False]
+FAILED console/tests/test_change_email.py::test_change_email_request_goes_into_db[---False]
+FAILED console/tests/test_change_email.py::test_email_change_code_refuses_if_not_logged_in
+FAILED console/tests/test_change_email.py::test_email_change_code - IndexErro...
+======================== 20 failed, 2 passed in 12.60s ========================

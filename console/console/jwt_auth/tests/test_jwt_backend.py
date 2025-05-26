@@ -27,7 +27,7 @@ def test_jwt_backend_no_session(useUsername, usePassword, valid):
     user = User.objects.create_user(username=username, password=password)
     factory = RequestFactory()
     request = factory.get("/")
-    middleware = SessionMiddleware()
+    middleware = SessionMiddleware(get_response=lambda _: None)
     middleware.process_request(request)
     request.session.save()
     if not useUsername:
