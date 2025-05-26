@@ -1,3 +1,7 @@
 {
-    "todo-tree.tree.scanMode": "workspace"
+    "python.testing.pytestArgs": [
+        "console"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
