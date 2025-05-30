@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 import json
 import os
 import sys
+import traceback
 
 UserModel = get_user_model()
 
@@ -239,7 +240,7 @@ class JWTBackend(ModelBackend):
             if type(claims) == str:
                 # Assume that the claims are somehow encoded in JSON
                 claims = json.loads(claims)
-            if not (claims.get("nbf") and claims.get("exp")):
+            if type(claims) == dict and not (claims.get("nbf") and claims.get("exp")):
                 raise ValueError(
                     "Missing NotBefore (nbf) or Expiration (exp) in refresh token."
                 )
@@ -254,7 +255,7 @@ class JWTBackend(ModelBackend):
                 raise ValueError(f"Refresh token expired at {exp}.")
 
             user = UserModel._default_manager.get_by_natural_key(
-                refresh_token.claims.get("username")
+                claims.get("username")
             )
 
             access_token: JWT = self._make_token(user, ACCESS_TOKEN_LIFETIME)
@@ -263,7 +264,8 @@ class JWTBackend(ModelBackend):
             request.session.save()
             return True
         except Exception as e:
-            print(e)
+            pass # print(e, traceback.format_exc(), file=sys.stderr)
+            
         return False
 
     def get_public_key(self) -> bytes:

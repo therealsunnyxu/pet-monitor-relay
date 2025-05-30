@@ -1,1 +1,1 @@
-/usr/bin/ffmpeg -loglevel debug -rtmp_live live -i rtmp://127.0.0.1:1935/live/`cat /etc/stream_manager/stream.key` -c copy -f hls -hls_init_time 0 -hls_allow_cache 0 -hls_flags append_list+delete_segments+independent_segments+split_by_time+program_date_time /home/hls/stream.m3u8;
+/usr/bin/ffmpeg -loglevel debug -rtmp_live live -i rtmp://127.0.0.1:1935/live/`cat /etc/stream_manager/stream.key` -c copy -f hls -hls_init_time 0 -hls_allow_cache 1 -hls_time 6 -hls_flags append_list+delete_segments+independent_segments+split_by_time+program_date_time /home/hls/stream.m3u8;
