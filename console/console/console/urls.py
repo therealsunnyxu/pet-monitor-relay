@@ -33,6 +33,9 @@ urlpatterns = [
     path("token/csrf", AuthViews.csrf_token_handler, name="token-csrf"),
     path("token/access", AuthViews.validate_access_token_handler, name="token-access"),
 
+    # Miscellaneous routes
+    path("auth/username", AuthViews.get_username_handler, name="username"),
+
     # Email and password reset routes
     path("auth/login/forgot-password",AuthViews.forgot_password_request_handler, name="forgot-password-request"),
     path("auth/account/password",AuthViews.change_password_request_handler, name="change-password-request"),

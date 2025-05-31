@@ -106,6 +106,19 @@ def validate_access_token_handler(request: HttpRequest):
     return HttpResponse(content="Access token is valid", status=200)
 
 @method(["GET"])
+def get_username_handler(request: HttpRequest):
+    if not is_access_token_valid(request):
+        return HttpResponse(status=401)
+    
+    username = auth_backend.get_username_from_access_token(request)
+    if not username:
+        return HttpResponse(status=401)
+    if len(username) < 1 or username.strip() == "":
+        return HttpResponse(status=401)
+    
+    return HttpResponse(content=username, status=200)
+
+@method(["GET"])
 def csrf_token_handler(request: HttpRequest):
     res = HttpResponse(content="CSRF cookie set", status=200)
     res.set_cookie("csrftoken", get_token(request))

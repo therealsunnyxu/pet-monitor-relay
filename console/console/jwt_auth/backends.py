@@ -113,6 +113,17 @@ class JWTBackend(ModelBackend):
         self._store_tokens_on_login(request, user, temp_remember_me)
         return user
 
+    def get_username_from_access_token(self, request: HttpRequest):
+        if not self.validate_access_token(request):
+            return None
+        
+        access_token = request.session.get("access_token")
+        user: AbstractBaseUser = self._authenticate_with_token(access_token)
+        if not user:
+            return None
+        return user.get_username()
+
+
     def _authenticate_with_token(self, token: str | bytes):
         """Returns a user object if the passed in access token is valid
 
